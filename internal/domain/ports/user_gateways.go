@@ -2,7 +2,7 @@ package ports
 
 import (
 	"context"
-	"weather-notification/users/internal/domain/entities"
+	"weather-notification/internal/domain/entities"
 )
 
 type UserDatabaseGateway interface {

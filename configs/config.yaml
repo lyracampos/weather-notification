@@ -1,0 +1,9 @@
+users-api:
+  api:
+    host: '0.0.0.0'
+    port: 8080
+    writeTimeout: 15
+    readTimeout: 15
+    idleTimeout: 60
+  database:
+    connectionString: "postgres://user:password@localhost:5432/weather_notification?sslmode=disable"
