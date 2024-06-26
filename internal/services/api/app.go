@@ -37,16 +37,17 @@ func Run(config *configs.Config) {
 		log.Fatalf("failed to initialize postgres client: %v", err)
 	}
 	userDatabase := postgres.NewUserDatabase(databaseClient)
-
 	registerUsecase := usecases.NewRegisterUseCase(userDatabase)
+	unsubscribeUseCase := usecases.NewUnsubscribeUseUseCase(userDatabase)
 
 	router := mux.NewRouter()
 
 	healthHandler := handlers.NewHealthHandler(sugar)
 	router.HandleFunc("/health", healthHandler.Health).Methods(http.MethodGet)
 
-	userHandler := handlers.NewUserHandler(sugar, registerUsecase)
+	userHandler := handlers.NewUserHandler(sugar, registerUsecase, unsubscribeUseCase)
 	router.HandleFunc("/users", userHandler.Register).Methods(http.MethodPost)
+	router.HandleFunc("/users/{email}/unsubscribe", userHandler.Unsubscribe).Methods(http.MethodPut)
 
 	router.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 	opts := middleware.SwaggerUIOpts{SpecURL: "swagger.yaml"}

@@ -55,10 +55,17 @@ type userRegisterResponseWrapper struct {
 	Body entities.User
 }
 
-// swagger:parameters RegisterUser
+// swagger:parameters Register
 type userRegisterCommandWrapper struct {
 	// Payload to register new user in application
 	// in: body
 	// required: true
+	Body entities.User
+}
+
+// Data structure representing user unsubscribing
+// swagger:response userUnsubscribeResponse
+type userUnsubscribeResponseWrapper struct {
+	// in: body
 	Body entities.User
 }

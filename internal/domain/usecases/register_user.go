@@ -28,6 +28,7 @@ func (u *registerUserUseCase) Execute(ctx context.Context, user *entities.User) 
 		return nil, err
 	}
 
+	user.Subscribe()
 	createdUser, err := u.userDatabase.InsertUser(ctx, user)
 	if err != nil {
 		return &entities.User{}, err

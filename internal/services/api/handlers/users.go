@@ -3,26 +3,34 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"weather-notification/internal/domain"
 	"weather-notification/internal/domain/entities"
 	"weather-notification/internal/domain/usecases"
 
+	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
 
+var (
+	ErrUserDoesNotExist  = errors.New("no user was found for this email. Please check the email and try again")
+	ErrEmailAlreadyInUse = errors.New("email in use by another user")
+)
+
 type userHandler struct {
-	log             *zap.SugaredLogger
-	registerUseCase usecases.RegisterUserUseCase
+	log                *zap.SugaredLogger
+	registerUseCase    usecases.RegisterUserUseCase
+	unsubscribeUseCase usecases.UnsubscribeUserUseCase
 }
 
-func NewUserHandler(log *zap.SugaredLogger, registerUseCase usecases.RegisterUserUseCase) *userHandler {
+func NewUserHandler(log *zap.SugaredLogger, registerUseCase usecases.RegisterUserUseCase, unsubscribeUseCase usecases.UnsubscribeUserUseCase) *userHandler {
 	return &userHandler{
-		log:             log,
-		registerUseCase: registerUseCase,
+		log:                log,
+		registerUseCase:    registerUseCase,
+		unsubscribeUseCase: unsubscribeUseCase,
 	}
 }
 
@@ -31,7 +39,6 @@ func NewUserHandler(log *zap.SugaredLogger, registerUseCase usecases.RegisterUse
 // responses:
 //
 //	201: userRegisterResponse
-//	400: notFoundResponse
 //	501: internalServerErrorResponse
 func (h *userHandler) Register(rw http.ResponseWriter, r *http.Request) {
 	h.log.Info("userHandler.Register - started")
@@ -54,11 +61,42 @@ func (h *userHandler) Register(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.log.Info("userHandler.Register - finished successfully")
+	h.log.Info("userHandler.Register - finished")
 
 	rw.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(rw).Encode(user); err != nil {
-		log.Printf("userHandler.Register - encode failed: %v", err)
+		h.log.Error(fmt.Errorf("userHandler.Register - encode failed: %w", err))
+	}
+}
+
+// swagger:route PUT /users  users Unsubscribe
+// Unsubscribe user from list of notifications
+// responses:
+//
+//	200: userUnsubscribeResponse
+//	404: notFoundResponse
+//	501: internalServerErrorResponse
+func (h *userHandler) Unsubscribe(rw http.ResponseWriter, r *http.Request) {
+	h.log.Info("userHandler.Unsubscribe - started")
+
+	ctx := r.Context()
+	rw.Header().Set("Content-type", "application/json")
+
+	vars := mux.Vars(r)
+	email := vars["email"]
+
+	user, err := h.unsubscribeUseCase.Execute(ctx, email)
+	if err != nil {
+		h.handlerErrors(rw, err)
+
+		return
+	}
+
+	h.log.Info("userHandler.Unsubscribe - finished")
+
+	rw.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(rw).Encode(user); err != nil {
+		h.log.Error(fmt.Errorf("userHandler.Unsubscribe - encode failed: %w", err))
 	}
 }
 
@@ -66,16 +104,18 @@ func (h *userHandler) Register(rw http.ResponseWriter, r *http.Request) {
 func (h *userHandler) handlerErrors(rw http.ResponseWriter, err error) {
 	h.log.Error(err.Error())
 
-	msgErr := err.Error()
-
 	switch {
-	case strings.Contains(msgErr, "Error:Field"):
+	case strings.Contains(err.Error(), "Error:Field"):
 		rw.WriteHeader(http.StatusBadRequest)
+		rw.Write([]byte(err.Error()))
+	case errors.Is(err, domain.ErrUserNotFound):
+		rw.WriteHeader(http.StatusNotFound)
+		rw.Write([]byte(ErrUserDoesNotExist.Error()))
 	case errors.Is(err, domain.ErrEmailIsAlreadyInUse):
 		rw.WriteHeader(http.StatusConflict)
+		rw.Write([]byte(ErrEmailAlreadyInUse.Error()))
 	default:
 		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Write([]byte(err.Error()))
 	}
-
-	rw.Write([]byte(msgErr))
 }

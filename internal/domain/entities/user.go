@@ -50,3 +50,11 @@ func (u *User) Validate() error {
 	validate := validator.New()
 	return validate.Struct(u)
 }
+
+func (u *User) Subscribe() {
+	u.OptIn = true
+}
+
+func (u *User) Unsubscribe() {
+	u.OptIn = false
+}

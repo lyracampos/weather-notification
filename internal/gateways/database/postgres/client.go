@@ -11,10 +11,10 @@ import (
 	"go.uber.org/zap"
 )
 
-// const (
-// 	DuplicateKeyPrefix = "duplicate key value violates unique constraint"
-// 	NoRowsInResultSet  = "no rows in result set"
-// )
+const (
+	DuplicateKeyPrefix = "duplicate key value violates unique constraint"
+	NoRowsInResultSet  = "no rows in result set"
+)
 
 type Client struct {
 	log    *zap.SugaredLogger

@@ -10,3 +10,7 @@ const (
 func NewInsertError(model string, err error) error {
 	return fmt.Errorf("failed to insert table %s: %w", model, err)
 }
+
+func NewGetError(model string, err error) error {
+	return fmt.Errorf("failed to query table %s: %w", model, err)
+}

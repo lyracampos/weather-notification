@@ -9,6 +9,7 @@ import (
 
 var (
 	ErrEmailIsAlreadyInUse = errors.New("email is arealdy in use")
+	ErrUserNotFound        = errors.New("user not found")
 )
 
 func Error(fieldError validator.FieldError) string {
