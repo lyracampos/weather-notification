@@ -22,6 +22,9 @@ deps/stop:
 run/api:
 	go run cmd/main.go -e api -c ./configs/config.yaml
 
+run/worker:
+	go run cmd/main.go -e worker -c ./configs/config.yaml
+
 create/migration:
 	$(MIGRATE) create -seq -ext sql -dir $(MIGRATIONS_PATH) $(MIGRATION_NAME)
 

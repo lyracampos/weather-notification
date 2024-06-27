@@ -8,12 +8,9 @@ import (
 
 type (
 	Config struct {
-		UsersAPI UsersAPI
-	}
-
-	UsersAPI struct {
 		API      API
 		Database Database
+		Broker   Broker
 	}
 	API struct {
 		Host         string
@@ -25,6 +22,9 @@ type (
 	Database struct {
 		ConnectionString string
 	}
+	Broker struct {
+		ConnectionURL string
+	}
 )
 
 func NewConfig(configFilePath string) (*Config, error) {
@@ -34,17 +34,18 @@ func NewConfig(configFilePath string) (*Config, error) {
 	}
 
 	return &Config{
-		UsersAPI: UsersAPI{
-			API: API{
-				Host:         config.GetString("users-api.api.host"),
-				Port:         config.GetInt("users-api.api.port"),
-				WriteTimeout: config.GetInt("users-api.api.writeTimeout"),
-				ReadTimeout:  config.GetInt("users-api.api.readTimeout"),
-				IdleTimeout:  config.GetInt("users-api.api.idleTimeout"),
-			},
-			Database: Database{
-				ConnectionString: config.GetString("users-api.database.connectionString"),
-			},
+		API: API{
+			Host:         config.GetString("api.host"),
+			Port:         config.GetInt("api.port"),
+			WriteTimeout: config.GetInt("api.writeTimeout"),
+			ReadTimeout:  config.GetInt("api.readTimeout"),
+			IdleTimeout:  config.GetInt("api.idleTimeout"),
+		},
+		Database: Database{
+			ConnectionString: config.GetString("database.connectionString"),
+		},
+		Broker: Broker{
+			ConnectionURL: config.GetString("broker.connectionURL"),
 		},
 	}, nil
 }

@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"fmt"
 	"weather-notification/internal/domain/entities"
 	"weather-notification/internal/domain/ports"
 )
@@ -25,13 +26,13 @@ func NewRegisterUseCase(userDatabase ports.UserDatabaseGateway) *registerUserUse
 func (u *registerUserUseCase) Execute(ctx context.Context, user *entities.User) (*entities.User, error) {
 	err := user.Validate()
 	if err != nil {
-		return nil, err
+		return &entities.User{}, fmt.Errorf("registerUser usecase - invalid request: %w", err)
 	}
 
 	user.Subscribe()
 	createdUser, err := u.userDatabase.InsertUser(ctx, user)
 	if err != nil {
-		return &entities.User{}, err
+		return &entities.User{}, fmt.Errorf("registerUser usecase - failed to insert an user into database: %w", err)
 	}
 
 	return createdUser, nil

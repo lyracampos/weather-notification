@@ -23,7 +23,7 @@ type Client struct {
 }
 
 func NewClient(log *zap.SugaredLogger, config *configs.Config) (*Client, error) {
-	sqlDB := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(config.UsersAPI.Database.ConnectionString)))
+	sqlDB := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(config.Database.ConnectionString)))
 
 	newDB := bun.NewDB(sqlDB, pgdialect.New())
 	// newDB.AddQueryHook(bunotel.NewQueryHook())
@@ -39,4 +39,8 @@ func NewClient(log *zap.SugaredLogger, config *configs.Config) (*Client, error) 
 		config: config,
 		log:    log,
 	}, nil
+}
+
+func (c *Client) Close() {
+	c.DB.Close()
 }

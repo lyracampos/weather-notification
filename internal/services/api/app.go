@@ -10,6 +10,7 @@ import (
 	"time"
 	"weather-notification/configs"
 	"weather-notification/internal/domain/usecases"
+	"weather-notification/internal/gateways/broker/rabbitmq"
 	"weather-notification/internal/gateways/database/postgres"
 	"weather-notification/internal/services/api/handlers"
 
@@ -34,20 +35,35 @@ func Run(config *configs.Config) {
 	// initialize dependences
 	databaseClient, err := postgres.NewClient(sugar, config)
 	if err != nil {
-		log.Fatalf("failed to initialize postgres client: %v", err)
+		sugar.Fatalf("failed to initialize postgres client: %w", err)
 	}
+	defer databaseClient.Close()
+
 	userDatabase := postgres.NewUserDatabase(databaseClient)
+
+	brokerClient, err := rabbitmq.NewClient(sugar, config)
+	if err != nil {
+		sugar.Fatalf("failed to initialize rabbitmq client: %w", err)
+	}
+	defer brokerClient.Close()
+
+	notificationBroker := rabbitmq.NewNotificationBroker(brokerClient)
+
 	registerUsecase := usecases.NewRegisterUseCase(userDatabase)
 	unsubscribeUseCase := usecases.NewUnsubscribeUseUseCase(userDatabase)
+	queueNotificationsUseCase := usecases.NewQueueNotificationsUseCase(sugar, notificationBroker)
 
 	router := mux.NewRouter()
 
 	healthHandler := handlers.NewHealthHandler(sugar)
+	usersHandler := handlers.NewUserHandler(sugar, registerUsecase, unsubscribeUseCase)
+	notificationsHandler := handlers.NewNotificationHandler(sugar, queueNotificationsUseCase)
+
 	router.HandleFunc("/health", healthHandler.Health).Methods(http.MethodGet)
 
-	userHandler := handlers.NewUserHandler(sugar, registerUsecase, unsubscribeUseCase)
-	router.HandleFunc("/users", userHandler.Register).Methods(http.MethodPost)
-	router.HandleFunc("/users/{email}/unsubscribe", userHandler.Unsubscribe).Methods(http.MethodPut)
+	router.HandleFunc("/users", usersHandler.Register).Methods(http.MethodPost)
+	router.HandleFunc("/users/{email}/unsubscribe", usersHandler.Unsubscribe).Methods(http.MethodPut)
+	router.HandleFunc("/notifications", notificationsHandler.Notify).Methods(http.MethodPost)
 
 	router.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 	opts := middleware.SwaggerUIOpts{SpecURL: "swagger.yaml"}
@@ -56,13 +72,13 @@ func Run(config *configs.Config) {
 
 	http.Handle("/", router)
 
-	address := fmt.Sprintf("%s:%d", config.UsersAPI.API.Host, config.UsersAPI.API.Port)
+	address := fmt.Sprintf("%s:%d", config.API.Host, config.API.Port)
 	server := &http.Server{
 		Addr:         address,
 		Handler:      router,
-		WriteTimeout: time.Second * time.Duration(config.UsersAPI.API.WriteTimeout),
-		ReadTimeout:  time.Second * time.Duration(config.UsersAPI.API.ReadTimeout),
-		IdleTimeout:  time.Second * time.Duration(config.UsersAPI.API.IdleTimeout),
+		WriteTimeout: time.Second * time.Duration(config.API.WriteTimeout),
+		ReadTimeout:  time.Second * time.Duration(config.API.ReadTimeout),
+		IdleTimeout:  time.Second * time.Duration(config.API.IdleTimeout),
 	}
 
 	go func() {

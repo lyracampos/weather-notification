@@ -5,11 +5,24 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Package",
+            "name": "Run Worker",
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "cmd/main.go"
+            "program": "cmd/main.go",
+            "env": {
+                "-e": "worker"
+            }
+        },
+        {
+            "name": "Run API",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "cmd/main.go",
+            "env": {
+                "e": "api"
+            }
         }
     ]
 }

@@ -32,7 +32,7 @@ func (u *unsubscribeUserUseCase) Execute(ctx context.Context, email string) (*en
 	user.Unsubscribe()
 	updatedUser, err := u.userDatabase.UpdateUser(ctx, user)
 	if err != nil {
-		return &entities.User{}, fmt.Errorf("unsubscribe usecase - failed to update user on database: %w", err)
+		return &entities.User{}, fmt.Errorf("unsubscribe usecase - failed to update user into database: %w", err)
 	}
 
 	return updatedUser, nil
