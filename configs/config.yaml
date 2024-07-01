@@ -10,3 +10,5 @@ broker:
   connectionURL: "amqp://rabbitmq:rabbitmq@localhost:5672/"
 weatherAPI:
   addressURL: "http://servicos.cptec.inpe.br"
+  timeout: 300
+  retries: 3

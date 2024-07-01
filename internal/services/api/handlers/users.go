@@ -16,7 +16,7 @@ import (
 
 var (
 	ErrUserDoesNotExist     = errors.New("no user was found for this email. Please check the email and try again")
-	ErrEmailAlreadyInUse    = errors.New("email in use by another user")
+	ErrEmailAlreadyInUse    = errors.New("email is already in use by another user")
 	ErrLocationNotSupported = errors.New("location not supported by platform")
 )
 

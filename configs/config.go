@@ -28,6 +28,8 @@ type (
 	}
 	WeatherAPI struct {
 		AddressURL string
+		Timeout    int
+		Retries    int
 	}
 )
 
@@ -53,6 +55,8 @@ func NewConfig(configFilePath string) (*Config, error) {
 		},
 		WeatherAPI: WeatherAPI{
 			AddressURL: config.GetString("weatherAPI.addressURL"),
+			Timeout:    config.GetInt("weatherAPI.timeout"),
+			Retries:    config.GetInt("weatherAPI.retries"),
 		},
 	}, nil
 }

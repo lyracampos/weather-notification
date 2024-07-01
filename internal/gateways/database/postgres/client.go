@@ -32,7 +32,7 @@ func NewClient(log *zap.SugaredLogger, config *configs.Config) (*Client, error) 
 		return &Client{}, fmt.Errorf("failed to connect to postgres database: %w", err)
 	}
 
-	log.Info("postgres client started successfully")
+	log.Info("postgres - client started...")
 
 	return &Client{
 		DB:     newDB,

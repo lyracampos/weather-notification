@@ -14,8 +14,6 @@ type Client struct {
 }
 
 func NewClient(log *zap.SugaredLogger, config *configs.Config) (*Client, error) {
-	log.Info("rabbitmq - client starting")
-
 	client := &Client{}
 	var err error
 
@@ -38,7 +36,7 @@ func NewClient(log *zap.SugaredLogger, config *configs.Config) (*Client, error) 
 		return &Client{}, fmt.Errorf("failed to create rabbitmq queues: %w", err)
 	}
 
-	log.Info("rabbitmq - client started")
+	log.Info("rabbitmq - client started...")
 
 	return client, nil
 }

@@ -2,6 +2,6 @@ package entities
 
 type City struct {
 	ID    int
-	Name  string `xml:"nome"`
+	Name  string
 	State string
 }
