@@ -66,6 +66,8 @@ func (u *registerUserUseCase) Execute(ctx context.Context, input *RegisterUserIn
 		return &entities.User{}, fmt.Errorf("registerUser usecase - invalid request: %w", err)
 	}
 
+	//TODO: get city from cache
+
 	city, err := u.weatherAPI.GetCity(ctx, input.City, input.State)
 	if err != nil {
 		return &entities.User{}, fmt.Errorf("registerUser usecase - failed to get city from weather API: %w", err)

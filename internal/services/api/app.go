@@ -46,13 +46,13 @@ func Run(config *configs.Config) {
 		sugar.Fatalf("failed to initialize rabbitmq client: %w", err)
 	}
 	defer brokerClient.Close()
-	notificationBroker := rabbitmq.NewNotificationBroker(brokerClient)
+	publishBroker := rabbitmq.NewPublisher(brokerClient)
 
 	weatherAPI := api.NewWeatherAPI(sugar, config)
 
 	registerUsecase := usecases.NewRegisterUseCase(userDatabase, weatherAPI)
 	unsubscribeUseCase := usecases.NewUnsubscribeUseUseCase(userDatabase)
-	queueNotificationsUseCase := usecases.NewEnqueueNotificationsUseCase(sugar, notificationBroker)
+	queueNotificationsUseCase := usecases.NewEnqueueNotificationsUseCase(sugar, publishBroker)
 
 	router := mux.NewRouter()
 

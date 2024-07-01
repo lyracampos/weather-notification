@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"weather-notification/internal/domain/entities"
+	"weather-notification/internal/domain/events"
 	"weather-notification/internal/domain/ports"
 
 	"github.com/go-playground/validator"
@@ -14,7 +15,7 @@ var _ EnqueueNotificationsUseCase = (*enqueueNotificationsUseCase)(nil)
 
 type QueueNotificationsInput struct {
 	Users []string `validate:"required,min=1"`
-	Type  string   `validate:"required,oneof=web push email sms"`
+	Type  string   `validate:"required,oneof=websocket push email sms"`
 }
 
 func (u *QueueNotificationsInput) Validate() error {
@@ -27,14 +28,14 @@ type EnqueueNotificationsUseCase interface {
 }
 
 type enqueueNotificationsUseCase struct {
-	log                *zap.SugaredLogger
-	notificationBroker ports.NotificationBrokerGateway
+	log           *zap.SugaredLogger
+	publishBroker ports.PublisherBrokerGateway
 }
 
-func NewEnqueueNotificationsUseCase(log *zap.SugaredLogger, notificationBroker ports.NotificationBrokerGateway) *enqueueNotificationsUseCase {
+func NewEnqueueNotificationsUseCase(log *zap.SugaredLogger, publishBroker ports.PublisherBrokerGateway) *enqueueNotificationsUseCase {
 	return &enqueueNotificationsUseCase{
-		log:                log,
-		notificationBroker: notificationBroker,
+		log:           log,
+		publishBroker: publishBroker,
 	}
 }
 
@@ -58,13 +59,29 @@ func (u *enqueueNotificationsUseCase) Execute(ctx context.Context, input QueueNo
 }
 
 func (u *enqueueNotificationsUseCase) enqueueNotification(ctx context.Context, emailTo string, notificationType string) error {
-	notification := entities.NewNotification(emailTo, entities.NotificationTypeWebSocket, entities.NotificationStatusQueued)
-
-	if notificationType == "web" {
-		err := u.notificationBroker.PublishWebNotification(ctx, notification)
-		if err != nil {
-			u.log.Errorf("failed to enqueue websocket notification to user: %s :%w", emailTo, err)
+	switch notificationType {
+	case entities.NotificationTypeWebSocket:
+		event := events.WebsocketNotificationEvent{UserEmail: emailTo}
+		if err := u.publishBroker.WebsocketNotificationEvent(ctx, &event); err != nil {
+			u.log.Errorf("failed to enqueue websockt notification event for user: %s %v", event.UserEmail, err)
 		}
+	case entities.NotificationTypeEmail:
+		event := events.EmailNotificationEvent{UserEmail: emailTo}
+		if err := u.publishBroker.EmailNotificationEvent(ctx, &event); err != nil {
+			u.log.Errorf("failed to enqueue email notification event for user: %s %v", event.UserEmail, err)
+		}
+	case entities.NotificationTypeSMS:
+		event := events.SMSNotificationEvent{UserEmail: emailTo}
+		if err := u.publishBroker.SMSNotificationEvent(ctx, &event); err != nil {
+			u.log.Errorf("failed to enqueue sms notification event for user: %s %v", event.UserEmail, err)
+		}
+	case entities.NotificationTypePush:
+		event := events.PushNotificationEvent{UserEmail: emailTo}
+		if err := u.publishBroker.PushNotificationEvent(ctx, &event); err != nil {
+			u.log.Errorf("failed to enqueue push notification event for user: %s %v", event.UserEmail, err)
+		}
+	default:
+		return nil
 	}
 
 	return nil

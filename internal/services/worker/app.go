@@ -1,73 +1,67 @@
 package worker
 
 import (
+	"context"
+	"fmt"
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
 	"weather-notification/configs"
+	"weather-notification/internal/gateways/broker/rabbitmq"
+	eventshandler "weather-notification/internal/services/worker/events_handler"
 
-	amqp "github.com/rabbitmq/amqp091-go"
+	"go.uber.org/zap"
 )
 
-func Run(config *configs.Config) {
-	conn, err := amqp.Dial("amqp://rabbitmq:rabbitmq@localhost:5672/")
+func Run(config *configs.Config, workerType string) {
+	ctx := context.Background()
+	logger, err := zap.NewProduction()
 	if err != nil {
-		log.Panicf("falied to connect on rabbitmq servers: %w", err)
+		log.Fatalf("can't initialize zap logger: %v", err)
 	}
-	defer conn.Close()
-
-	ch, err := conn.Channel()
-	if err != nil {
-		log.Fatalf("failed to open a channel: %v", err)
-	}
-	defer ch.Close()
-
-	q, err := ch.QueueDeclare(
-		"websocket_notification", // name
-		false,                    // durable
-		false,                    // delete when unused
-		false,                    // exclusive
-		false,                    // no-wait
-		nil,                      // arguments
-	)
-	if err != nil {
-		log.Fatalf("failed to declare a queue: %v", err)
-	}
-
-	ch.Qos(
-		5,     // prefetch count
-		0,     // prefetch size
-		false, // global
-	)
-
-	msgs, err := ch.Consume(
-		q.Name,
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		log.Fatalf("failed to register a consumer: %v", err)
-	}
-
-	sigchan := make(chan os.Signal, 1)
-	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
-
-	forever := make(chan bool)
-
-	go func() {
-		for d := range msgs {
-			log.Printf("message received: %v", string(d.Body))
+	defer func() {
+		if err := logger.Sync(); err != nil {
+			log.Fatalf("failed to defer logger sync: %v", err)
 		}
 	}()
 
-	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
-	<-sigchan
+	sugar := logger.Sugar()
 
-	log.Printf("interrupted, shutting down")
-	forever <- true
+	brokerClient, err := rabbitmq.NewClient(sugar, config)
+	if err != nil {
+		sugar.Fatalf("failed to initialize rabbitmq client: %w", err)
+	}
+	defer brokerClient.Close()
+
+	switch workerType {
+	case "websocket":
+		runWebsocketNotificationWorker(ctx, sugar, brokerClient)
+	case "email":
+		runEmailNotificationWorker(config)
+	case "sms":
+		runSMSNotificationWorker(config)
+	case "push":
+		runPushNotificationWorker(config)
+	}
+}
+
+func runWebsocketNotificationWorker(ctx context.Context, log *zap.SugaredLogger, brokerClient *rabbitmq.Client) {
+	log.Info("running websocket notification worker")
+	websocketEventHandler := eventshandler.NewWebsocketEventHandler(log)
+	consumerWebsocket := rabbitmq.NewConsumerWebsocket(log, brokerClient, websocketEventHandler.EventHandler)
+	consumerWebsocket.Consume(ctx)
+	// consumerWebsocket := rabbitmq.NewConsumerWebsocket(log, brokerClient, websocketEventHandler)
+
+	// websocketConsumer := consumers.NewWebsocketConsumer(log, consumerBroker)
+	// websocketConsumer.Consume(ctx)
+}
+
+func runEmailNotificationWorker(config *configs.Config) {
+	fmt.Printf("running email notification worker")
+}
+
+func runSMSNotificationWorker(config *configs.Config) {
+	fmt.Printf("running sms notification worker")
+}
+
+func runPushNotificationWorker(config *configs.Config) {
+	fmt.Printf("running push notification worker")
 }
