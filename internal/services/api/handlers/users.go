@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strings"
 	"weather-notification/internal/domain"
-	"weather-notification/internal/domain/entities"
 	"weather-notification/internal/domain/usecases"
 
 	"github.com/gorilla/mux"
@@ -16,8 +15,9 @@ import (
 )
 
 var (
-	ErrUserDoesNotExist  = errors.New("no user was found for this email. Please check the email and try again")
-	ErrEmailAlreadyInUse = errors.New("email in use by another user")
+	ErrUserDoesNotExist     = errors.New("no user was found for this email. Please check the email and try again")
+	ErrEmailAlreadyInUse    = errors.New("email in use by another user")
+	ErrLocationNotSupported = errors.New("location not supported by platform")
 )
 
 type userHandler struct {
@@ -47,14 +47,14 @@ func (h *userHandler) Register(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-type", "application/json")
 
 	requestBody, _ := io.ReadAll(r.Body)
-	var requestedUser entities.User
-	if err := json.Unmarshal(requestBody, &requestedUser); err != nil {
+	var input usecases.RegisterUserInput
+	if err := json.Unmarshal(requestBody, &input); err != nil {
 		h.handlerErrors(rw, err)
 
 		return
 	}
 
-	user, err := h.registerUseCase.Execute(ctx, &requestedUser)
+	user, err := h.registerUseCase.Execute(ctx, &input)
 	if err != nil {
 		h.handlerErrors(rw, err)
 
@@ -114,6 +114,9 @@ func (h *userHandler) handlerErrors(rw http.ResponseWriter, err error) {
 	case errors.Is(err, domain.ErrEmailIsAlreadyInUse):
 		rw.WriteHeader(http.StatusConflict)
 		rw.Write([]byte(ErrEmailAlreadyInUse.Error()))
+	case errors.Is(err, domain.ErrCityNotFound):
+		rw.WriteHeader(http.StatusUnprocessableEntity)
+		rw.Write([]byte(ErrLocationNotSupported.Error()))
 	default:
 		rw.WriteHeader(http.StatusInternalServerError)
 		rw.Write([]byte(err.Error()))

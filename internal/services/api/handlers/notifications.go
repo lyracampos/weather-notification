@@ -13,10 +13,10 @@ import (
 
 type notificationHandler struct {
 	log                       *zap.SugaredLogger
-	queueNotificationsUseCase usecases.QueueNotificationsUseCase
+	queueNotificationsUseCase usecases.EnqueueNotificationsUseCase
 }
 
-func NewNotificationHandler(log *zap.SugaredLogger, queueNotificationsUseCase usecases.QueueNotificationsUseCase) *notificationHandler {
+func NewNotificationHandler(log *zap.SugaredLogger, queueNotificationsUseCase usecases.EnqueueNotificationsUseCase) *notificationHandler {
 	return &notificationHandler{
 		log:                       log,
 		queueNotificationsUseCase: queueNotificationsUseCase,

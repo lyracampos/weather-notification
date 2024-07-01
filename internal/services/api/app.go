@@ -12,6 +12,7 @@ import (
 	"weather-notification/internal/domain/usecases"
 	"weather-notification/internal/gateways/broker/rabbitmq"
 	"weather-notification/internal/gateways/database/postgres"
+	api "weather-notification/internal/gateways/http"
 	"weather-notification/internal/services/api/handlers"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -32,13 +33,12 @@ func Run(config *configs.Config) {
 
 	sugar := logger.Sugar()
 
-	// initialize dependences
+	// initialize client dependences
 	databaseClient, err := postgres.NewClient(sugar, config)
 	if err != nil {
 		sugar.Fatalf("failed to initialize postgres client: %w", err)
 	}
 	defer databaseClient.Close()
-
 	userDatabase := postgres.NewUserDatabase(databaseClient)
 
 	brokerClient, err := rabbitmq.NewClient(sugar, config)
@@ -46,12 +46,13 @@ func Run(config *configs.Config) {
 		sugar.Fatalf("failed to initialize rabbitmq client: %w", err)
 	}
 	defer brokerClient.Close()
-
 	notificationBroker := rabbitmq.NewNotificationBroker(brokerClient)
 
-	registerUsecase := usecases.NewRegisterUseCase(userDatabase)
+	weatherAPI := api.NewWeatherAPI(sugar, config)
+
+	registerUsecase := usecases.NewRegisterUseCase(userDatabase, weatherAPI)
 	unsubscribeUseCase := usecases.NewUnsubscribeUseUseCase(userDatabase)
-	queueNotificationsUseCase := usecases.NewQueueNotificationsUseCase(sugar, notificationBroker)
+	queueNotificationsUseCase := usecases.NewEnqueueNotificationsUseCase(sugar, notificationBroker)
 
 	router := mux.NewRouter()
 

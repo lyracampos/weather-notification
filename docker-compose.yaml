@@ -23,7 +23,8 @@ services:
       timeout: 10s
       retries: 5
 
-  rabbit:
+  rabbitmq:
+    container_name: rabbitmq
     image: "rabbitmq:3-management"
     environment:
       RABBITMQ_DEFAULT_USER: "rabbitmq"

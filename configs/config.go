@@ -8,9 +8,10 @@ import (
 
 type (
 	Config struct {
-		API      API
-		Database Database
-		Broker   Broker
+		API        API
+		Database   Database
+		Broker     Broker
+		WeatherAPI WeatherAPI
 	}
 	API struct {
 		Host         string
@@ -24,6 +25,9 @@ type (
 	}
 	Broker struct {
 		ConnectionURL string
+	}
+	WeatherAPI struct {
+		AddressURL string
 	}
 )
 
@@ -46,6 +50,9 @@ func NewConfig(configFilePath string) (*Config, error) {
 		},
 		Broker: Broker{
 			ConnectionURL: config.GetString("broker.connectionURL"),
+		},
+		WeatherAPI: WeatherAPI{
+			AddressURL: config.GetString("weatherAPI.addressURL"),
 		},
 	}, nil
 }

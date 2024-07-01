@@ -17,6 +17,7 @@ type User struct {
 	LastName  string    `bun:"last_name,notnull"`
 	Email     string    `bun:"email,notnull"`
 	Phone     string    `bun:"phone,notnull"`
+	CityID    int       `bun:"city_id,notnull"`
 	OptIn     bool      `bun:"opt_in,notnull"`
 	CreatedAt time.Time `bun:"created_at,notnull,default:current_timestamp"`
 	UpdatedAt time.Time `bun:"updated_at,notnull,default:current_timestamp"`
@@ -30,6 +31,7 @@ func NewUserModel(entity *entities.User) *User {
 		LastName:  entity.LastName,
 		Email:     entity.Email,
 		Phone:     entity.Phone,
+		CityID:    entity.CityID,
 		OptIn:     entity.OptIn,
 		CreatedAt: entity.CreatedAt,
 		UpdatedAt: entity.UpdatedAt,
@@ -43,6 +45,7 @@ func (u *User) ToEntity() *entities.User {
 		LastName:  u.LastName,
 		Email:     u.Email,
 		Phone:     u.Phone,
+		CityID:    u.CityID,
 		OptIn:     u.OptIn,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
