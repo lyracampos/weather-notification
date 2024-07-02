@@ -13,18 +13,18 @@ import (
 
 var _ EnqueueNotificationsUseCase = (*enqueueNotificationsUseCase)(nil)
 
-type QueueNotificationsInput struct {
+type EnqueueNotificationsInput struct {
 	Users []string `validate:"required,min=1"`
 	Type  string   `validate:"required,oneof=websocket push email sms"`
 }
 
-func (u *QueueNotificationsInput) Validate() error {
+func (u *EnqueueNotificationsInput) Validate() error {
 	validate := validator.New()
 	return validate.Struct(u)
 }
 
 type EnqueueNotificationsUseCase interface {
-	Execute(ctx context.Context, input QueueNotificationsInput) error
+	Execute(ctx context.Context, input EnqueueNotificationsInput) error
 }
 
 type enqueueNotificationsUseCase struct {
@@ -39,7 +39,7 @@ func NewEnqueueNotificationsUseCase(log *zap.SugaredLogger, publishBroker ports.
 	}
 }
 
-func (u *enqueueNotificationsUseCase) Execute(ctx context.Context, input QueueNotificationsInput) error {
+func (u *enqueueNotificationsUseCase) Execute(ctx context.Context, input EnqueueNotificationsInput) error {
 	err := input.Validate()
 	if err != nil {
 		return fmt.Errorf("invalid request: %w", err)

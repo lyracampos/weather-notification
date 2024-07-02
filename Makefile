@@ -22,7 +22,7 @@ deps/stop:
 run/api:
 	go run cmd/main.go -e api -c ./configs/config.yaml
 
-run/websocket-worker:
+run/worker-websocket:
 	go run cmd/main.go -e worker -t websocket -c ./configs/config.yaml
 
 create/migration:

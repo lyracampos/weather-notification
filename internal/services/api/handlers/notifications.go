@@ -30,7 +30,7 @@ func (h *notificationHandler) Notify(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-type", "application/json")
 
 	requestBody, _ := io.ReadAll(r.Body)
-	var requestedInput usecases.QueueNotificationsInput
+	var requestedInput usecases.EnqueueNotificationsInput
 	if err := json.Unmarshal(requestBody, &requestedInput); err != nil {
 		h.handlerErrors(rw, err)
 

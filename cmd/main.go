@@ -33,7 +33,7 @@ func run() error {
 	var workerType string
 
 	flag.StringVar(&configFilePath, "c", defaultConfigFilePath, "File path with app configs file.")
-	flag.StringVar(&appEntrypoint, "e", workerEntrypoint, "Entrypoint to define which application will be started. [api, worker]")
+	flag.StringVar(&appEntrypoint, "e", apiEntrypoint, "Entrypoint to define which application will be started. [api, worker]")
 	flag.StringVar(&workerType, "t", websocketWorkerType, "Type to define which worker will be started. [websocket, email, sms, push]")
 	flag.Parse()
 

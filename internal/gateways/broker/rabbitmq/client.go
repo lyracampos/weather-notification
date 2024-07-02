@@ -34,11 +34,6 @@ func NewClient(log *zap.SugaredLogger, config *configs.Config) (*Client, error) 
 	if err != nil {
 		return &Client{}, fmt.Errorf("failed to create rabbitmq channel: %w", err)
 	}
-
-	err = client.configureQueue("websocket-notifications")
-	if err != nil {
-		return &Client{}, fmt.Errorf("failed to create rabbitmq queue: %w", err)
-	}
 	err = client.configureQueues()
 	if err != nil {
 		return &Client{}, fmt.Errorf("failed to create rabbitmq queues: %w", err)

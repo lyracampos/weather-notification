@@ -11,6 +11,7 @@ type User struct {
 	Email     string
 	Phone     string
 	CityID    int
+	FromCoast bool
 	OptIn     bool
 
 	CreatedAt time.Time
@@ -24,6 +25,7 @@ func NewUser(firstName, lastName, email, phone string, cityID int) *User {
 		Email:     email,
 		Phone:     phone,
 		CityID:    cityID,
+		FromCoast: false,
 		OptIn:     true,
 	}
 }

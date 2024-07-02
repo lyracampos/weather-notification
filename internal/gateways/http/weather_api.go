@@ -15,6 +15,7 @@ import (
 	"weather-notification/internal/domain/ports"
 	"weather-notification/internal/gateways/http/models"
 
+	"github.com/cenkalti/backoff"
 	"go.uber.org/zap"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/runes"
@@ -23,6 +24,14 @@ import (
 )
 
 var _ ports.WeatherHTTPGateway = (*weatherAPI)(nil)
+
+const (
+	DefaultInitialInterval     = 500 * time.Millisecond
+	DefaultRandomizationFactor = 0.5
+	DefaultMultiplier          = 1.5
+	DefaultMaxInterval         = 60 * time.Second
+	DefaultMaxElapsedTime      = 15 * time.Minute
+)
 
 type weatherAPI struct {
 	addressURL string
@@ -43,8 +52,30 @@ func NewWeatherAPI(log *zap.SugaredLogger, config *configs.Config) *weatherAPI {
 }
 
 func (w *weatherAPI) GetCity(ctx context.Context, city string, state string) (*entities.City, error) {
+	var (
+		response *http.Response
+		err      error
+	)
+
 	url := fmt.Sprintf("%s/XML/listaCidades?city=%s", w.addressURL, city)
-	response, err := w.doRequestWithRetry(url, http.MethodGet)
+	getCity := func() error {
+		w.log.Infof("retry to get city")
+		response, err = w.doRequest(url, http.MethodGet)
+		if err != nil {
+			return fmt.Errorf("failed to get city from weather API %v", err)
+		}
+
+		return nil
+	}
+
+	expBackoff := backoff.NewExponentialBackOff()
+	expBackoff.MaxElapsedTime = 10 * time.Second
+
+	err = backoff.Retry(getCity, expBackoff)
+	if err != nil {
+		return &entities.City{}, fmt.Errorf("failed to connect to get city from weather API after retrying: %v", err)
+	}
+
 	if err != nil {
 		return &entities.City{}, fmt.Errorf("failed to make HTTP request to weather API: %w", err)
 	}
@@ -74,34 +105,95 @@ func (w *weatherAPI) GetCity(ctx context.Context, city string, state string) (*e
 	return &entities.City{}, domain.ErrCityNotFound
 }
 
-func (w *weatherAPI) doRequestWithRetry(url string, httpMethod string) (*http.Response, error) {
+func (w *weatherAPI) GetWeather(ctx context.Context, cityID int) (*[]entities.Weather, error) {
 	var (
 		response *http.Response
 		err      error
-		attempts int = 1
 	)
-	httpClient := http.Client{Timeout: time.Duration(w.timeout) * time.Millisecond}
 
-	url = strings.Replace(url, " ", "%20", -1)
-
-	for w.retries > 0 {
-		switch httpMethod {
-		case http.MethodGet:
-			response, err = httpClient.Get(url)
-		default:
-		}
-
+	url := fmt.Sprintf("%s/XML/cidade/%d/previsao.xml", w.addressURL, cityID)
+	getWeather := func() error {
+		w.log.Infof("retry to get city")
+		response, err = w.doRequest(url, http.MethodGet)
 		if err != nil {
-			w.log.Errorf("attempt %d to make http request to the api failed %v:", attempts, err)
-			w.retries -= 1
-			attempts += 1
-			time.Sleep(time.Duration(3) * time.Second)
-		} else {
-			break
+			return fmt.Errorf("failed to get weather from weather API %v", err)
 		}
+
+		return nil
 	}
 
-	return response, err
+	expBackoff := backoff.NewExponentialBackOff()
+	expBackoff.MaxElapsedTime = 10 * time.Second
+
+	err = backoff.Retry(getWeather, expBackoff)
+	if err != nil {
+		return &[]entities.Weather{}, fmt.Errorf("failed to connect to get wather from weather API after retrying: %v", err)
+	}
+
+	if err != nil {
+		return &[]entities.Weather{}, fmt.Errorf("failed to make HTTP request to weather API: %v", err)
+	}
+
+	decoder, err := w.readXMLKResponse(response)
+	defer response.Body.Close()
+
+	if err != nil {
+		return &[]entities.Weather{}, fmt.Errorf("faield to read xml response from weather API: %v", err)
+	}
+
+	var weatherList models.WeatherList
+	err = decoder.Decode(&weatherList)
+	if err != nil {
+		return &[]entities.Weather{}, fmt.Errorf("failed to unmarshal XML: %v", err)
+	}
+
+	return weatherList.ToEntity(), nil
+}
+
+func (w *weatherAPI) GetWeatherCoast(ctx context.Context, cityID int) (*entities.WeatherCoast, error) {
+	var (
+		response *http.Response
+		err      error
+	)
+
+	url := fmt.Sprintf("%s/XML/cidade/%d/dia/0/ondas.xml", w.addressURL, cityID)
+
+	getWeatherCoast := func() error {
+		w.log.Infof("retry to get city")
+		response, err = w.doRequest(url, http.MethodGet)
+		if err != nil {
+			return fmt.Errorf("failed to get weather coast from weather API %v", err)
+		}
+
+		return nil
+	}
+
+	expBackoff := backoff.NewExponentialBackOff()
+	expBackoff.MaxElapsedTime = 10 * time.Second
+
+	err = backoff.Retry(getWeatherCoast, expBackoff)
+	if err != nil {
+		return &entities.WeatherCoast{}, fmt.Errorf("failed to connect to get wather coast from weather API after retrying: %v", err)
+	}
+	// response, err := w.doRequestWithRetry2(url, http.MethodGet)
+	if err != nil {
+		return &entities.WeatherCoast{}, fmt.Errorf("failed to make HTTP request to weather API: %v", err)
+	}
+
+	decoder, err := w.readXMLKResponse(response)
+	defer response.Body.Close()
+
+	if err != nil {
+		return &entities.WeatherCoast{}, fmt.Errorf("faield to read xml response from weather API: %v", err)
+	}
+
+	var weatherList models.WeatherCoast
+	err = decoder.Decode(&weatherList)
+	if err != nil {
+		return &entities.WeatherCoast{}, fmt.Errorf("failed to unmarshal XML: %v", err)
+	}
+
+	return weatherList.ToEntity(), nil
 }
 
 func (w *weatherAPI) readXMLKResponse(response *http.Response) (*xml.Decoder, error) {
@@ -130,4 +222,22 @@ func removeAccents(s string) (string, error) {
 		panic(e)
 	}
 	return output, nil
+}
+
+func (w *weatherAPI) doRequest(url string, httpMethod string) (*http.Response, error) {
+	var (
+		response *http.Response
+		err      error
+	)
+
+	httpClient := http.Client{Timeout: time.Duration(w.timeout) * time.Millisecond}
+	url = strings.Replace(url, " ", "%20", -1)
+
+	switch httpMethod {
+	case http.MethodGet:
+		response, err = httpClient.Get(url)
+	default:
+	}
+
+	return response, err
 }

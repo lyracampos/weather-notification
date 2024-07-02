@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log"
 	"weather-notification/configs"
+	"weather-notification/internal/domain/usecases"
 	"weather-notification/internal/gateways/broker/rabbitmq"
+	"weather-notification/internal/gateways/database/postgres"
+	api "weather-notification/internal/gateways/http"
 	eventshandler "weather-notification/internal/services/worker/events_handler"
 
 	"go.uber.org/zap"
@@ -25,15 +28,27 @@ func Run(config *configs.Config, workerType string) {
 
 	sugar := logger.Sugar()
 
+	// initialize client dependences
+	databaseClient, err := postgres.NewClient(sugar, config)
+	if err != nil {
+		sugar.Fatalf("failed to initialize postgres client: %w", err)
+	}
+	defer databaseClient.Close()
+	userDatabase := postgres.NewUserDatabase(databaseClient)
+
 	brokerClient, err := rabbitmq.NewClient(sugar, config)
 	if err != nil {
 		sugar.Fatalf("failed to initialize rabbitmq client: %w", err)
 	}
 	defer brokerClient.Close()
 
+	weatherAPI := api.NewWeatherAPI(sugar, config)
+
+	notifyUserUseCase := usecases.NewNotifyUserUseCase(sugar, userDatabase, weatherAPI)
+
 	switch workerType {
 	case "websocket":
-		runWebsocketNotificationWorker(ctx, sugar, brokerClient)
+		runWebsocketNotificationWorker(ctx, sugar, brokerClient, notifyUserUseCase)
 	case "email":
 		runEmailNotificationWorker(config)
 	case "sms":
@@ -43,15 +58,11 @@ func Run(config *configs.Config, workerType string) {
 	}
 }
 
-func runWebsocketNotificationWorker(ctx context.Context, log *zap.SugaredLogger, brokerClient *rabbitmq.Client) {
-	log.Info("running websocket notification worker")
-	websocketEventHandler := eventshandler.NewWebsocketEventHandler(log)
+func runWebsocketNotificationWorker(ctx context.Context, log *zap.SugaredLogger, brokerClient *rabbitmq.Client, notifyUserUseCase usecases.NotifyUserUseCase) {
+	log.Info("running worker for websocket notifications")
+	websocketEventHandler := eventshandler.NewWebsocketEventHandler(log, notifyUserUseCase)
 	consumerWebsocket := rabbitmq.NewConsumerWebsocket(log, brokerClient, websocketEventHandler.EventHandler)
 	consumerWebsocket.Consume(ctx)
-	// consumerWebsocket := rabbitmq.NewConsumerWebsocket(log, brokerClient, websocketEventHandler)
-
-	// websocketConsumer := consumers.NewWebsocketConsumer(log, consumerBroker)
-	// websocketConsumer.Consume(ctx)
 }
 
 func runEmailNotificationWorker(config *configs.Config) {

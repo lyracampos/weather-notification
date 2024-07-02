@@ -11,4 +11,4 @@ broker:
 weatherAPI:
   addressURL: "http://servicos.cptec.inpe.br"
   timeout: 300
-  retries: 3
+  retries: 5

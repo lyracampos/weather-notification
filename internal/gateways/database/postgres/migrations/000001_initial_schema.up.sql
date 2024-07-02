@@ -5,6 +5,7 @@ CREATE TABLE users (
       email text NOT NULL,
       phone text NOT NULL,
       city_id int NOT NULL,
+      from_coast boolean NOT NULL default false,
       opt_in boolean NOT NULL default true,
       created_at timestamp NOT NULL DEFAULT now(),
       updated_at timestamp NOT NULL DEFAULT now(),

@@ -7,3 +7,18 @@ type Weather struct {
 	Min       int
 	IUV       float32
 }
+
+type WeatherCoast struct {
+	Morning   WeatherCoastData
+	Afternoon WeatherCoastData
+	Evening   WeatherCoastData
+}
+
+type WeatherCoastData struct {
+	Day           string
+	SeaAgiation   string
+	WaveHeight    string
+	Direction     string
+	WindSpeed     string
+	WindDirection string
+}

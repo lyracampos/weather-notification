@@ -7,6 +7,6 @@ import (
 
 type WeatherHTTPGateway interface {
 	GetCity(ctx context.Context, city string, state string) (*entities.City, error)
-	// GetWeather(ctx context.Context, cityID int64) (*[]entities.Weather, error)
-	// GetWeatherCoast(ctx context.Context, )
+	GetWeather(ctx context.Context, cityID int) (*[]entities.Weather, error)
+	GetWeatherCoast(ctx context.Context, cityID int) (*entities.WeatherCoast, error)
 }
