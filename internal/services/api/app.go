@@ -14,6 +14,7 @@ import (
 	"weather-notification/internal/gateways/database/postgres"
 	api "weather-notification/internal/gateways/http"
 	"weather-notification/internal/services/api/handlers"
+	"weather-notification/internal/services/websocket"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
@@ -60,11 +61,17 @@ func Run(config *configs.Config) {
 	usersHandler := handlers.NewUserHandler(sugar, registerUsecase, unsubscribeUseCase)
 	notificationsHandler := handlers.NewNotificationHandler(sugar, queueNotificationsUseCase)
 
+	websocketHandler := websocket.NewWebSocketHandler(sugar)
+
 	router.HandleFunc("/health", healthHandler.Health).Methods(http.MethodGet)
 
 	router.HandleFunc("/users", usersHandler.Register).Methods(http.MethodPost)
 	router.HandleFunc("/users/{email}/unsubscribe", usersHandler.Unsubscribe).Methods(http.MethodPut)
 	router.HandleFunc("/notifications", notificationsHandler.Notify).Methods(http.MethodPost)
+
+	router.HandleFunc("/ws/connect", websocketHandler.Connect)
+	router.HandleFunc("/ws/clients", websocketHandler.Clients).Methods(http.MethodGet)
+	router.HandleFunc("/ws/notify", websocketHandler.NotifyUser).Methods(http.MethodPost)
 
 	router.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 	opts := middleware.SwaggerUIOpts{SpecURL: "swagger.yaml"}
