@@ -47,18 +47,14 @@ func Run(config *configs.Config, workerType string) {
 	notifyUserUseCase := usecases.NewNotifyUserUseCase(sugar, userDatabase, weatherAPI)
 
 	switch workerType {
-	case "websocket":
-		runWebsocketNotificationWorker(ctx, sugar, brokerClient, notifyUserUseCase)
-	case "email":
-		runEmailNotificationWorker(config)
-	case "sms":
-		runSMSNotificationWorker(config)
-	case "push":
-		runPushNotificationWorker(config)
+	case "web":
+		runWebNotificationWorker(ctx, sugar, brokerClient, notifyUserUseCase)
+	default:
+		sugar.Error("invalid worker type")
 	}
 }
 
-func runWebsocketNotificationWorker(ctx context.Context, log *zap.SugaredLogger, brokerClient *rabbitmq.Client, notifyUserUseCase usecases.NotifyUserUseCase) {
+func runWebNotificationWorker(ctx context.Context, log *zap.SugaredLogger, brokerClient *rabbitmq.Client, notifyUserUseCase usecases.NotifyUserUseCase) {
 	log.Info("running worker for websocket notifications")
 	websocketEventHandler := eventshandler.NewWebsocketEventHandler(log, notifyUserUseCase)
 	consumerWebsocket := rabbitmq.NewConsumerWebsocket(log, brokerClient, websocketEventHandler.EventHandler)

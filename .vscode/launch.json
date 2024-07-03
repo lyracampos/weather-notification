@@ -15,14 +15,25 @@
             ]
         },
         {
-            "name": "Run Worker Websocket",
+            "name": "Run Worker Web",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "program": "cmd/main.go",
             "args":  [
                 "-e", "worker",
-                "-t", "websocket"
+                "-t", "web"
+            ]
+        }
+        ,
+        {
+            "name": "Run Websocket Client",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "cmd/main.go",
+            "args":  [
+                "-e", "websocket",
             ]
         }
     ]

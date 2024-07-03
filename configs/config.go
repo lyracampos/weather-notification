@@ -8,10 +8,11 @@ import (
 
 type (
 	Config struct {
-		API        API
-		Database   Database
-		Broker     Broker
-		WeatherAPI WeatherAPI
+		API             API
+		Database        Database
+		Broker          Broker
+		WeatherAPI      WeatherAPI
+		WebSocketClient WebSocketClient
 	}
 	API struct {
 		Host         string
@@ -30,6 +31,13 @@ type (
 		AddressURL string
 		Timeout    int
 		Retries    int
+	}
+	WebSocketClient struct {
+		Host         string
+		Port         int
+		WriteTimeout int
+		ReadTimeout  int
+		IdleTimeout  int
 	}
 )
 
@@ -57,6 +65,13 @@ func NewConfig(configFilePath string) (*Config, error) {
 			AddressURL: config.GetString("weatherAPI.addressURL"),
 			Timeout:    config.GetInt("weatherAPI.timeout"),
 			Retries:    config.GetInt("weatherAPI.retries"),
+		},
+		WebSocketClient: WebSocketClient{
+			Host:         config.GetString("websocket.client.host"),
+			Port:         config.GetInt("websocket.client.port"),
+			WriteTimeout: config.GetInt("websocket.client.writeTimeout"),
+			ReadTimeout:  config.GetInt("websocket.client.readTimeout"),
+			IdleTimeout:  config.GetInt("websocket.client.idleTimeout"),
 		},
 	}, nil
 }

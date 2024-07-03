@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"weather-notification/configs"
 	"weather-notification/internal/services/api"
+	"weather-notification/internal/services/websocket"
 	"weather-notification/internal/services/worker"
 )
 
@@ -13,10 +14,8 @@ const (
 	defaultConfigFilePath = "../configs/config.yaml"
 	apiEntrypoint         = "api"
 	workerEntrypoint      = "worker"
-	websocketWorkerType   = "websocket"
-	emailWorkerType       = "email"
-	smsWorkerType         = "sms"
-	pushWorkerType        = "push"
+	webSocketEntrypoint   = "websocket"
+	webWorkerType         = "web"
 )
 
 var errInvalidAppEntrypoint = errors.New("invalid entrypoint, must be one of [api, worker]")
@@ -33,8 +32,8 @@ func run() error {
 	var workerType string
 
 	flag.StringVar(&configFilePath, "c", defaultConfigFilePath, "File path with app configs file.")
-	flag.StringVar(&appEntrypoint, "e", apiEntrypoint, "Entrypoint to define which application will be started. [api, worker]")
-	flag.StringVar(&workerType, "t", websocketWorkerType, "Type to define which worker will be started. [websocket, email, sms, push]")
+	flag.StringVar(&appEntrypoint, "e", apiEntrypoint, "Entrypoint to define which application will be started. [api, worker, webSocketClient]")
+	flag.StringVar(&workerType, "t", webWorkerType, "Type to define which worker will be started. [web, email, sms, push]")
 	flag.Parse()
 
 	config, err := configs.NewConfig(configFilePath)
@@ -47,6 +46,8 @@ func run() error {
 		api.Run(config)
 	case workerEntrypoint:
 		worker.Run(config, workerType)
+	case webSocketEntrypoint:
+		websocket.Run(config)
 	default:
 		return errInvalidAppEntrypoint
 	}

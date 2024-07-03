@@ -14,7 +14,8 @@ import (
 	"weather-notification/internal/gateways/database/postgres"
 	api "weather-notification/internal/gateways/http"
 	"weather-notification/internal/services/api/handlers"
-	"weather-notification/internal/services/websocket"
+
+	// "weather-notification/internal/services/websocket"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
@@ -61,7 +62,7 @@ func Run(config *configs.Config) {
 	usersHandler := handlers.NewUserHandler(sugar, registerUsecase, unsubscribeUseCase)
 	notificationsHandler := handlers.NewNotificationHandler(sugar, queueNotificationsUseCase)
 
-	websocketHandler := websocket.NewWebSocketHandler(sugar)
+	// websocketHandler := websocket.NewWebSocketHandler(sugar)
 
 	router.HandleFunc("/health", healthHandler.Health).Methods(http.MethodGet)
 
@@ -69,9 +70,9 @@ func Run(config *configs.Config) {
 	router.HandleFunc("/users/{email}/unsubscribe", usersHandler.Unsubscribe).Methods(http.MethodPut)
 	router.HandleFunc("/notifications", notificationsHandler.Notify).Methods(http.MethodPost)
 
-	router.HandleFunc("/ws/connect", websocketHandler.Connect)
-	router.HandleFunc("/ws/clients", websocketHandler.Clients).Methods(http.MethodGet)
-	router.HandleFunc("/ws/notify", websocketHandler.NotifyUser).Methods(http.MethodPost)
+	// router.HandleFunc("/ws/connect", websocketHandler.Connect)
+	// router.HandleFunc("/ws/clients", websocketHandler.Clients).Methods(http.MethodGet)
+	// router.HandleFunc("/ws/notify", websocketHandler.NotifyUser).Methods(http.MethodPost)
 
 	router.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 	opts := middleware.SwaggerUIOpts{SpecURL: "swagger.yaml"}
@@ -90,7 +91,7 @@ func Run(config *configs.Config) {
 	}
 
 	go func() {
-		log.Printf("running API HTTP server at: %s", address)
+		log.Printf("running API HTTP server on: %s", address)
 
 		if err := server.ListenAndServe(); err != nil {
 			log.Println(err)

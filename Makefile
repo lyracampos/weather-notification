@@ -22,8 +22,11 @@ deps/stop:
 run/api:
 	go run cmd/main.go -e api -c ./configs/config.yaml
 
-run/worker-websocket:
-	go run cmd/main.go -e worker -t websocket -c ./configs/config.yaml
+run/worker-web:
+	go run cmd/main.go -e worker -t web -c ./configs/config.yaml
+
+run/websocket-client:
+	go run cmd/main.go -e websocket -c ./configs/config.yaml
 
 create/migration:
 	$(MIGRATE) create -seq -ext sql -dir $(MIGRATIONS_PATH) $(MIGRATION_NAME)

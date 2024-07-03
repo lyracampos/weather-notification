@@ -12,3 +12,10 @@ weatherAPI:
   addressURL: "http://servicos.cptec.inpe.br"
   timeout: 300
   retries: 5
+websocket:
+  client:
+    host: '0.0.0.0'
+    port: 9090
+    writeTimeout: 15
+    readTimeout: 15
+    idleTimeout: 60
