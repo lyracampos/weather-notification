@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// nolint: errcheck
 func (h *websocketHandler) ListClients(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	var res []string

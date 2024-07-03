@@ -39,6 +39,7 @@ func NewEnqueueNotificationsUseCase(log *zap.SugaredLogger, publishBroker ports.
 	}
 }
 
+// nolint: errcheck
 func (u *enqueueNotificationsUseCase) Execute(ctx context.Context, input EnqueueNotificationsInput) error {
 	err := input.Validate()
 	if err != nil {
@@ -48,12 +49,6 @@ func (u *enqueueNotificationsUseCase) Execute(ctx context.Context, input Enqueue
 	for _, user := range input.Users {
 		go u.enqueueNotification(ctx, user, input.Type)
 	}
-
-	// errCh := make(chan error, len(input.Users))
-
-	// for _, user := range input.Users {
-	// 	go u.enqueueNotification(ctx, user, input.Type, errCh)
-	// }
 
 	return nil
 }
@@ -86,18 +81,3 @@ func (u *enqueueNotificationsUseCase) enqueueNotification(ctx context.Context, e
 
 	return nil
 }
-
-// func (u *queueNotificationsUseCase) enqueueNotification(ctx context.Context, emailTo string, notificationType string, errCh chan<- error) {
-// 	notification := entities.NewNotification(emailTo, entities.NotificationTypeWebSocket, entities.NotificationStatusQueued)
-// 	err := notification.Validate()
-// 	if err != nil {
-// 		errCh <- fmt.Errorf("invalid request: %w", err)
-// 	}
-
-// 	if notificationType == "web" {
-// 		err = u.notificationBroker.PublishWebNotification(ctx, notification)
-// 		if err != nil {
-// 			errCh <- fmt.Errorf("failed to enqueue websocket notification: %w", err)
-// 		}
-// 	}
-// }

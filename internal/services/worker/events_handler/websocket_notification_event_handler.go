@@ -28,6 +28,7 @@ func NewWebsocketEventHandler(log *zap.SugaredLogger, notifyUserUseCase usecases
 	}
 }
 
+// nolint: staticcheck
 func (h *websocketEventHandler) EventHandler(ctx context.Context, msg amqp.Delivery, err error) {
 	event := events.WebsocketNotificationEvent{}
 	if err := json.Unmarshal([]byte(msg.Body), &event); err != nil {

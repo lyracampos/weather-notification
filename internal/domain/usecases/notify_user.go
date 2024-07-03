@@ -54,7 +54,9 @@ func (u *notifyUserUseCase) Execute(ctx context.Context, email string) (*NotifyU
 	}
 
 	if user.OptIn {
-		u.webNotificationAPI.SendNotification(ctx, user, weather, weatherCoast)
+		if err := u.webNotificationAPI.SendNotification(ctx, user, weather, weatherCoast); err != nil {
+			u.log.Errorf("failed to notify user %s: %v", user.Email, err)
+		}
 	}
 
 	output := &NotifyUserUseCaseOutput{}

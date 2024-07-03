@@ -2,7 +2,6 @@ package worker
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"weather-notification/configs"
 	"weather-notification/internal/domain/usecases"
@@ -60,16 +59,4 @@ func runWebNotificationWorker(ctx context.Context, log *zap.SugaredLogger, broke
 	websocketEventHandler := eventshandler.NewWebsocketEventHandler(log, notifyUserUseCase)
 	consumerWebsocket := rabbitmq.NewConsumerWebsocket(log, brokerClient, websocketEventHandler.EventHandler)
 	consumerWebsocket.Consume(ctx)
-}
-
-func runEmailNotificationWorker(config *configs.Config) {
-	fmt.Printf("running email notification worker")
-}
-
-func runSMSNotificationWorker(config *configs.Config) {
-	fmt.Printf("running sms notification worker")
-}
-
-func runPushNotificationWorker(config *configs.Config) {
-	fmt.Printf("running push notification worker")
 }

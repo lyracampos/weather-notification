@@ -14,6 +14,7 @@ type notification struct {
 	WeatherCoast *entities.WeatherCoast
 }
 
+// nolint: errcheck
 func (h *websocketHandler) NotifyUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
 
