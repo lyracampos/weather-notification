@@ -24,13 +24,19 @@ type userHandler struct {
 	log                *zap.SugaredLogger
 	registerUseCase    usecases.RegisterUserUseCase
 	unsubscribeUseCase usecases.UnsubscribeUserUseCase
+	listUserUseCase    usecases.ListUserUseCase
 }
 
-func NewUserHandler(log *zap.SugaredLogger, registerUseCase usecases.RegisterUserUseCase, unsubscribeUseCase usecases.UnsubscribeUserUseCase) *userHandler {
+func NewUserHandler(
+	log *zap.SugaredLogger,
+	registerUseCase usecases.RegisterUserUseCase,
+	unsubscribeUseCase usecases.UnsubscribeUserUseCase,
+	listUserUseCase usecases.ListUserUseCase) *userHandler {
 	return &userHandler{
 		log:                log,
 		registerUseCase:    registerUseCase,
 		unsubscribeUseCase: unsubscribeUseCase,
+		listUserUseCase:    listUserUseCase,
 	}
 }
 
@@ -97,6 +103,27 @@ func (h *userHandler) Unsubscribe(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(rw).Encode(user); err != nil {
 		h.log.Error(fmt.Errorf("userHandler.Unsubscribe - encode failed: %w", err))
+	}
+}
+
+func (h *userHandler) List(rw http.ResponseWriter, r *http.Request) {
+	h.log.Info("userHandler.List - started")
+
+	ctx := r.Context()
+	rw.Header().Set("Content-type", "application/json")
+
+	users, err := h.listUserUseCase.Execute(ctx)
+	if err != nil {
+		h.handlerErrors(rw, err)
+
+		return
+	}
+
+	h.log.Info("userHandler.Unsubscribe - finished")
+
+	rw.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(rw).Encode(users); err != nil {
+		h.log.Error(fmt.Errorf("userHandler.List - encode failed: %w", err))
 	}
 }
 

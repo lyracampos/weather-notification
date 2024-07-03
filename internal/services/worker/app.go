@@ -43,8 +43,9 @@ func Run(config *configs.Config, workerType string) {
 	defer brokerClient.Close()
 
 	weatherAPI := api.NewWeatherAPI(sugar, config)
+	webNotificationAPI := api.NewWebSocketServer(sugar, config)
 
-	notifyUserUseCase := usecases.NewNotifyUserUseCase(sugar, userDatabase, weatherAPI)
+	notifyUserUseCase := usecases.NewNotifyUserUseCase(sugar, userDatabase, weatherAPI, webNotificationAPI)
 
 	switch workerType {
 	case "web":

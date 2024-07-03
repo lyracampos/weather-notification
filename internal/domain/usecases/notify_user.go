@@ -22,16 +22,18 @@ type NotifyUserUseCase interface {
 }
 
 type notifyUserUseCase struct {
-	log          *zap.SugaredLogger
-	userDatabase ports.UserDatabaseGateway
-	weatherAPI   ports.WeatherHTTPGateway
+	log                *zap.SugaredLogger
+	userDatabase       ports.UserDatabaseGateway
+	weatherAPI         ports.WeatherHTTPGateway
+	webNotificationAPI ports.WebNotificationHTTPGateway
 }
 
-func NewNotifyUserUseCase(log *zap.SugaredLogger, userDatabase ports.UserDatabaseGateway, weatherAPI ports.WeatherHTTPGateway) *notifyUserUseCase {
+func NewNotifyUserUseCase(log *zap.SugaredLogger, userDatabase ports.UserDatabaseGateway, weatherAPI ports.WeatherHTTPGateway, webNotificationAPI ports.WebNotificationHTTPGateway) *notifyUserUseCase {
 	return &notifyUserUseCase{
-		log:          log,
-		userDatabase: userDatabase,
-		weatherAPI:   weatherAPI,
+		log:                log,
+		userDatabase:       userDatabase,
+		weatherAPI:         weatherAPI,
+		webNotificationAPI: webNotificationAPI,
 	}
 }
 
@@ -51,9 +53,15 @@ func (u *notifyUserUseCase) Execute(ctx context.Context, email string) (*NotifyU
 		u.log.Infof("failed to get weather coast from weather API :%v", err)
 	}
 
-	return &NotifyUserUseCaseOutput{
-		User:         user,
-		Weather:      weather,
-		WeatherCoast: weatherCoast,
-	}, nil
+	if user.OptIn {
+		u.webNotificationAPI.SendNotification(ctx, user, weather, weatherCoast)
+	}
+
+	output := &NotifyUserUseCaseOutput{}
+	output.Weather = weather
+	if weatherCoast != nil {
+		output.WeatherCoast = weatherCoast
+	}
+
+	return output, nil
 }

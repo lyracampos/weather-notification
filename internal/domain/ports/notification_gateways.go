@@ -20,3 +20,7 @@ type ConsumerWebsocketGateway interface {
 type NotificationDatabaseGateway interface {
 	InsertNotification(ctx context.Context, notification *entities.Notification) (*entities.Notification, error)
 }
+
+type WebNotificationHTTPGateway interface {
+	SendNotification(ctx context.Context, user *entities.User, weather *[]entities.Weather, weatherCoast *entities.WeatherCoast) error
+}

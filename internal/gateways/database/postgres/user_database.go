@@ -64,3 +64,19 @@ func (u *userDatabase) UpdateUser(ctx context.Context, user *entities.User) (*en
 
 	return model.ToEntity(), nil
 }
+
+func (u *userDatabase) ListUser(ctx context.Context) ([]*entities.User, error) {
+	var modelList []models.User
+	query := u.Client.DB.NewSelect().Model(&modelList)
+
+	if err := query.Scan(ctx); err != nil {
+		return nil, fmt.Errorf("failed to query user table: %w", err)
+	}
+
+	list := make([]*entities.User, 0)
+	for _, model := range modelList {
+		list = append(list, model.ToEntity())
+	}
+
+	return list, nil
+}

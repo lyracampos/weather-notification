@@ -54,25 +54,21 @@ func Run(config *configs.Config) {
 
 	registerUsecase := usecases.NewRegisterUseCase(userDatabase, weatherAPI)
 	unsubscribeUseCase := usecases.NewUnsubscribeUseUseCase(userDatabase)
+	listUseCase := usecases.NewListUserUseUseCase(userDatabase)
 	queueNotificationsUseCase := usecases.NewEnqueueNotificationsUseCase(sugar, publishBroker)
 
 	router := mux.NewRouter()
 
 	healthHandler := handlers.NewHealthHandler(sugar)
-	usersHandler := handlers.NewUserHandler(sugar, registerUsecase, unsubscribeUseCase)
+	usersHandler := handlers.NewUserHandler(sugar, registerUsecase, unsubscribeUseCase, listUseCase)
 	notificationsHandler := handlers.NewNotificationHandler(sugar, queueNotificationsUseCase)
-
-	// websocketHandler := websocket.NewWebSocketHandler(sugar)
 
 	router.HandleFunc("/health", healthHandler.Health).Methods(http.MethodGet)
 
+	router.HandleFunc("/users", usersHandler.List).Methods(http.MethodGet)
 	router.HandleFunc("/users", usersHandler.Register).Methods(http.MethodPost)
 	router.HandleFunc("/users/{email}/unsubscribe", usersHandler.Unsubscribe).Methods(http.MethodPut)
 	router.HandleFunc("/notifications", notificationsHandler.Notify).Methods(http.MethodPost)
-
-	// router.HandleFunc("/ws/connect", websocketHandler.Connect)
-	// router.HandleFunc("/ws/clients", websocketHandler.Clients).Methods(http.MethodGet)
-	// router.HandleFunc("/ws/notify", websocketHandler.NotifyUser).Methods(http.MethodPost)
 
 	router.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 	opts := middleware.SwaggerUIOpts{SpecURL: "swagger.yaml"}

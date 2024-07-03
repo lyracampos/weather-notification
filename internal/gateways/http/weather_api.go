@@ -173,24 +173,28 @@ func (w *weatherAPI) GetWeatherCoast(ctx context.Context, cityID int) (*entities
 
 	err = backoff.Retry(getWeatherCoast, expBackoff)
 	if err != nil {
-		return &entities.WeatherCoast{}, fmt.Errorf("failed to connect to get wather coast from weather API after retrying: %v", err)
+		return nil, fmt.Errorf("failed to connect to get wather coast from weather API after retrying: %v", err)
 	}
 	// response, err := w.doRequestWithRetry2(url, http.MethodGet)
 	if err != nil {
-		return &entities.WeatherCoast{}, fmt.Errorf("failed to make HTTP request to weather API: %v", err)
+		return nil, fmt.Errorf("failed to make HTTP request to weather API: %v", err)
 	}
 
 	decoder, err := w.readXMLKResponse(response)
 	defer response.Body.Close()
 
 	if err != nil {
-		return &entities.WeatherCoast{}, fmt.Errorf("faield to read xml response from weather API: %v", err)
+		return nil, fmt.Errorf("faield to read xml response from weather API: %v", err)
 	}
 
 	var weatherList models.WeatherCoast
 	err = decoder.Decode(&weatherList)
 	if err != nil {
-		return &entities.WeatherCoast{}, fmt.Errorf("failed to unmarshal XML: %v", err)
+		return nil, fmt.Errorf("failed to unmarshal XML: %v", err)
+	}
+
+	if weatherList.Morning.SeaAgiation == "undefined" {
+		return nil, nil
 	}
 
 	return weatherList.ToEntity(), nil

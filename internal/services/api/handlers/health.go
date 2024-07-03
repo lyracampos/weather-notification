@@ -18,6 +18,6 @@ func NewHealthHandler(log *zap.SugaredLogger) *healthHandler {
 
 // nolint: errcheck
 func (h *healthHandler) Health(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("HandlerHealth - checking API status")
-	w.Write([]byte("user API is running"))
+	h.log.Info("HandlerHealth - weather API is running")
+	w.Write([]byte("Weather API is running"))
 }

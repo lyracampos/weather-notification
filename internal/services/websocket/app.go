@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"time"
 	"weather-notification/configs"
+	"weather-notification/internal/services/websocket/handlers"
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -29,9 +30,9 @@ func Run(config *configs.Config) {
 
 	router := mux.NewRouter()
 
-	websocketHandler := NewWebSocketHandler(sugar)
+	websocketHandler := handlers.NewWebSocketHandler(sugar)
 	router.HandleFunc("/ws/connect", websocketHandler.Connect)
-	router.HandleFunc("/ws/clients", websocketHandler.Clients).Methods(http.MethodGet)
+	router.HandleFunc("/ws/clients", websocketHandler.ListClients).Methods(http.MethodGet)
 	router.HandleFunc("/ws/notify", websocketHandler.NotifyUser).Methods(http.MethodPost)
 
 	http.Handle("/", router)

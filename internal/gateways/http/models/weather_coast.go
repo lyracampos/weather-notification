@@ -31,5 +31,21 @@ func (w *WeatherCoast) ToEntity() *entities.WeatherCoast {
 			WindSpeed:     w.Morning.WindSpeed,
 			WindDirection: w.Morning.WindDirection,
 		},
+		Afternoon: entities.WeatherCoastData{
+			Day:           w.Afternoon.Day,
+			SeaAgiation:   w.Afternoon.SeaAgiation,
+			WaveHeight:    w.Afternoon.WaveHeight,
+			Direction:     w.Afternoon.Direction,
+			WindSpeed:     w.Afternoon.WindSpeed,
+			WindDirection: w.Afternoon.WindDirection,
+		},
+		Evening: entities.WeatherCoastData{
+			Day:           w.Evening.Day,
+			SeaAgiation:   w.Evening.SeaAgiation,
+			WaveHeight:    w.Evening.WaveHeight,
+			Direction:     w.Evening.Direction,
+			WindSpeed:     w.Evening.WindSpeed,
+			WindDirection: w.Evening.WindDirection,
+		},
 	}
 }
