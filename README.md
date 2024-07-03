@@ -18,7 +18,7 @@ Para garantir **resiliência** a aplicação trabalha com eventos que são proce
 Para garantir a **escalabilidade** as aplicações são independentes uma das outras e podem rodar com mais de uma instância ao mesmo tempo.
 A aplicação está preparada para rodar em container com apenas uma imagem Docker que inicia a aplicação de acordo com o entrypoint recebido (api, worker, websocket)
 
-![image](https://drive.google.com/uc?export=view&id=1QEjrymT9_sBGdNLX7m5ZqUEEn3Kz3rNm)
+![image](https://drive.google.com/uc?export=view&id=1llDQ2xr3QLoubmjJC3B848W7KjpcLTpY)
 
 
 ## Use cases
