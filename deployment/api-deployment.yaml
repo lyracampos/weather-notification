@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-notification-api
+  labels:
+    app: weather-notification-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather-notification-api
+  template:
+    metadata:
+      labels:
+        app: weather-notification-api
+    spec:
+      containers:
+      - name: weather-notification-api
+        image: "fredericoleao/weather-notification:0.2"
+        ports:
+        - containerPort: 8080

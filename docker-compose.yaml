@@ -22,6 +22,8 @@ services:
       interval: 5s
       timeout: 10s
       retries: 5
+    networks:
+      - weather_notification
 
   rabbitmq:
     container_name: rabbitmq
@@ -33,3 +35,36 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
+    networks:
+      - weather_notification
+
+  api:
+    container_name: api
+    image: "fredericoleao/weather-notification:0.2"
+    ports:
+      - "8080:8080"
+    command: -e api
+    networks:
+      - weather_notification
+    depends_on:
+      - postgres
+
+  worker:
+    depends_on:
+      - rabbitmq
+      - postgres
+    container_name: worker
+    image: "fredericoleao/weather-notification:0.2"
+    command: -e worker
+    networks:
+      - weather_notification
+
+  websocket:
+    container_name: websocket
+    image: "fredericoleao/weather-notification:0.2"
+    command: -e websocket
+    networks:
+      - weather_notification
+
+networks:
+  weather_notification:

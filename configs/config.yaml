@@ -5,9 +5,9 @@ api:
   readTimeout: 15
   idleTimeout: 60
 database:
-  connectionString: "postgres://user:password@localhost:5432/weather_notification?sslmode=disable"
+  connectionString: "postgres://user:password@postgres:5432/weather_notification?sslmode=disable"
 broker:
-  connectionURL: "amqp://rabbitmq:rabbitmq@localhost:5672/"
+  connectionURL: "amqp://rabbitmq:rabbitmq@rabbitmq:5672/"
 weatherAPI:
   addressURL: "http://servicos.cptec.inpe.br"
   timeout: 300

@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-notification-db
+  labels:
+    app: weather-notification-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather-notification-db
+  template:
+    metadata:
+      labels:
+        app: weather-notification-db
+    spec:
+      containers:
+      - name: postgres
+        image: "postgres:16.2"
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          value: user
+        - name: POSTGRES_PASSWORD
+          value: password
+        - name: POSTGRES_DB
+          value: weather_notification

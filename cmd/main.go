@@ -15,7 +15,6 @@ const (
 	apiEntrypoint         = "api"
 	workerEntrypoint      = "worker"
 	webSocketEntrypoint   = "websocket"
-	webWorkerType         = "web"
 )
 
 var errInvalidAppEntrypoint = errors.New("invalid entrypoint, must be one of [api, worker]")
@@ -29,11 +28,9 @@ func main() {
 func run() error {
 	var configFilePath string
 	var appEntrypoint string
-	var workerType string
 
 	flag.StringVar(&configFilePath, "c", defaultConfigFilePath, "File path with app configs file.")
 	flag.StringVar(&appEntrypoint, "e", apiEntrypoint, "Entrypoint to define which application will be started. [api, worker, webSocketClient]")
-	flag.StringVar(&workerType, "t", webWorkerType, "Type to define which worker will be started. [web, email, sms, push]")
 	flag.Parse()
 
 	config, err := configs.NewConfig(configFilePath)
@@ -45,7 +42,7 @@ func run() error {
 	case apiEntrypoint:
 		api.Run(config)
 	case workerEntrypoint:
-		worker.Run(config, workerType)
+		worker.Run(config)
 	case webSocketEntrypoint:
 		websocket.Run(config)
 	default:

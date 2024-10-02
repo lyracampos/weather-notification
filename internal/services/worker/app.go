@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func Run(config *configs.Config, workerType string) {
+func Run(config *configs.Config) {
 	ctx := context.Background()
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -46,12 +46,7 @@ func Run(config *configs.Config, workerType string) {
 
 	notifyUserUseCase := usecases.NewNotifyUserUseCase(sugar, userDatabase, weatherAPI, webNotificationAPI)
 
-	switch workerType {
-	case "web":
-		runWebNotificationWorker(ctx, sugar, brokerClient, notifyUserUseCase)
-	default:
-		sugar.Error("invalid worker type")
-	}
+	runWebNotificationWorker(ctx, sugar, brokerClient, notifyUserUseCase)
 }
 
 func runWebNotificationWorker(ctx context.Context, log *zap.SugaredLogger, brokerClient *rabbitmq.Client, notifyUserUseCase usecases.NotifyUserUseCase) {

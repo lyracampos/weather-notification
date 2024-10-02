@@ -11,13 +11,24 @@ lint:
 build:
 	go build ./...
 
-deps/start:
-	docker compose up -d
+start:
+	make start-infra && sleep 10 && make start-app
+
+start-infra:
+	docker compose up -d postgres rabbitmq
 	until docker exec postgres pg_isready; do echo 'Waiting for postgres server...' && sleep 1; done
 	make migration/up
 
-deps/stop:
-	docker compose down
+start-app:
+	docker compose up -d api worker websocket
+	until docker exec postgres pg_isready; do echo 'Waiting for postgres server...' && sleep 1; done
+	make migration/up
+
+stop-infra:
+	docker compose down postgres rabbitmq
+
+stop-app:
+	docker compose down api worker rabbitmq websocket
 
 run/api:
 	go run cmd/main.go -e api -c ./configs/config.yaml
