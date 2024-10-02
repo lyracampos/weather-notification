@@ -26,3 +26,15 @@ spec:
           value: password
         - name: POSTGRES_DB
           value: weather_notification
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: weather-notification-db
+spec:
+  selector:
+    app.kubernetes.io/name: weather-notification-db
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
